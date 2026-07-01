@@ -16,6 +16,27 @@ public sealed class FastListView : ListView
         OwnerDraw = true;
     }
 
+    /// <summary>Stretch the last column to fill any empty space so there's no light gap on the right.</summary>
+    public bool AutoFillLastColumn { get; set; } = true;
+
+    private void FillLastColumn()
+    {
+        if (!AutoFillLastColumn || Columns.Count == 0 || !IsHandleCreated) return;
+        int used = 0;
+        for (int i = 0; i < Columns.Count - 1; i++) used += Columns[i].Width;
+        int avail = ClientSize.Width - used - 2;
+        if (avail > 48) Columns[^1].Width = avail;
+    }
+
+    protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); FillLastColumn(); }
+    protected override void OnClientSizeChanged(EventArgs e) { base.OnClientSizeChanged(e); FillLastColumn(); }
+    protected override void OnVisibleChanged(EventArgs e) { base.OnVisibleChanged(e); FillLastColumn(); }
+    protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
+    {
+        base.OnColumnWidthChanged(e);
+        if (AutoFillLastColumn && e.ColumnIndex != Columns.Count - 1) FillLastColumn(); // guard prevents recursion
+    }
+
     protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
     {
         using (var bg = new SolidBrush(Theme.HeaderBg)) e.Graphics.FillRectangle(bg, e.Bounds);

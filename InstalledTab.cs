@@ -15,6 +15,10 @@ public sealed class InstalledTab : UserControl
     private readonly Label _summary = new();
     private List<InstalledProgram> _all = new();
 
+    private static readonly string[] ColNames = { "Program", "Publisher", "Version", "Size", "Location" };
+    private int _sortCol = 0;
+    private bool _sortAsc = true;
+
     public InstalledTab(KillSwitchContext ctx)
     {
         _ctx = ctx;
@@ -46,6 +50,12 @@ public sealed class InstalledTab : UserControl
         _list.Columns.Add("Location", 360);
         _list.MouseDown += (_, e) => { if (e.Button == MouseButtons.Right) { var h = _list.HitTest(e.Location); if (h.Item != null) h.Item.Selected = true; } };
         _list.DoubleClick += (_, _) => DoAnalyze();
+        _list.ColumnClick += (_, e) =>
+        {
+            if (e.Column == _sortCol) _sortAsc = !_sortAsc;
+            else { _sortCol = e.Column; _sortAsc = e.Column == 3 ? false : true; } // size defaults large→small
+            Render();
+        };
 
         var bar = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 78, WrapContents = true, Padding = new Padding(2) };
         Button B(string text, EventHandler onClick, Color? back = null)
@@ -86,6 +96,10 @@ public sealed class InstalledTab : UserControl
             .Where(p => f.Length == 0 || p.Name.Contains(f, StringComparison.OrdinalIgnoreCase) || p.Publisher.Contains(f, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
+        list.Sort(Compare);
+        for (int i = 0; i < _list.Columns.Count; i++)
+            _list.Columns[i].Text = ColNames[i] + (i == _sortCol ? (_sortAsc ? "  ▲" : "  ▼") : "");
+
         string? selName = Selected()?.Name;
         _list.BeginUpdate();
         _list.Items.Clear();
@@ -102,6 +116,37 @@ public sealed class InstalledTab : UserControl
         }
         _list.EndUpdate();
         _summary.Text = $"{list.Count} of {_all.Count} programs";
+    }
+
+    private int Compare(InstalledProgram a, InstalledProgram b)
+    {
+        int c = _sortCol switch
+        {
+            1 => string.Compare(a.Publisher, b.Publisher, StringComparison.OrdinalIgnoreCase),
+            2 => CompareVersion(a.Version, b.Version),
+            3 => a.SizeKB.CompareTo(b.SizeKB),
+            4 => string.Compare(a.InstallLocation, b.InstallLocation, StringComparison.OrdinalIgnoreCase),
+            _ => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase),
+        };
+        if (c == 0 && _sortCol != 0) c = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); // stable tiebreak by name
+        return _sortAsc ? c : -c;
+    }
+
+    private static int CompareVersion(string x, string y)
+    {
+        bool px = Version.TryParse(Trim4(x), out var vx);
+        bool py = Version.TryParse(Trim4(y), out var vy);
+        if (px && py) return vx!.CompareTo(vy);
+        if (px != py) return px ? -1 : 1;
+        return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // System.Version accepts 2–4 numeric components; keep the first 4 and bail out on non-numeric parts.
+    private static string Trim4(string v)
+    {
+        if (string.IsNullOrWhiteSpace(v)) return "";
+        var parts = v.Split('.');
+        return string.Join('.', parts.Take(4));
     }
 
     private InstalledProgram? Selected() => _list.SelectedItems.Count > 0 ? _list.SelectedItems[0].Tag as InstalledProgram : null;
