@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font: 13px/1.4 'Segoe UI', system-ui, sans-serif; width: 360px; margin: 0; color: #1b1b1b; background: #fafafa; }
+    header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0f6b3f; color: #fff; font-weight: 600; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #7CFFB0; box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
+    header .sp { margin-left: auto; }
+    header button { background: rgba(255,255,255,.15); border: 0; color: #fff; border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+    .pad { padding: 12px; }
+    .muted { color: #666; font-size: 12px; }
+    input[type=password], input[type=text] { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cdcdcd; border-radius: 7px; margin-top: 6px; }
+    button.primary { background: #0f6b3f; border: 1px solid #0f6b3f; color: #fff; border-radius: 7px; padding: 8px 12px; cursor: pointer; margin-top: 10px; }
+    .err { color: #c33; font-size: 12px; margin-top: 6px; min-height: 14px; }
+    .item { background: #fff; border: 1px solid #e4e4e4; border-radius: 8px; padding: 9px 10px; margin-bottom: 8px; }
+    .item .site { font-weight: 600; word-break: break-all; }
+    .item .usr { color: #333; margin-top: 2px; word-break: break-all; }
+    .item .pw { font-family: Consolas, monospace; margin-top: 4px; color: #333; }
+    .item .acts { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .item .acts button { font-size: 12px; border: 1px solid #cdcdcd; background: #f4f4f4; border-radius: 6px; padding: 5px 8px; cursor: pointer; }
+    .item .acts button.del { color: #c33; }
+    .search { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid #cdcdcd; border-radius: 7px; margin-bottom: 10px; }
+    .empty { color: #888; text-align: center; padding: 18px 0; }
+    .foot { font-size: 11px; color: #999; padding: 0 12px 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="dot"></span><span>KillSwitch Vault</span>
+    <span class="sp"></span>
+    <button id="lockBtn" style="display:none">Lock</button>
+  </header>
+
+  <div id="auth" class="pad" style="display:none">
+    <div id="authTitle" style="font-weight:600;margin-bottom:4px"></div>
+    <div class="muted" id="authInfo"></div>
+    <input type="password" id="master" placeholder="Master password" autofocus />
+    <input type="password" id="master2" placeholder="Confirm master password" style="display:none" />
+    <div class="err" id="authErr"></div>
+    <button class="primary" id="authBtn"></button>
+  </div>
+
+  <div id="vault" style="display:none">
+    <div class="pad">
+      <input class="search" id="search" placeholder="Search saved logins" />
+      <div id="list"></div>
+    </div>
+    <div class="foot">Encrypted locally (AES-256-GCM). Sees only this browser; nothing is uploaded.</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

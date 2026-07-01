@@ -1,0 +1,28 @@
+# Build output
+bin/
+obj/
+publish/
+dist/
+
+# VS / Rider / user files
+.vs/
+.idea/
+*.user
+*.suo
+
+# Secrets / certs (never commit)
+*.pfx
+*.snk
+*.p12
+config.json
+*.env
+.env
+
+# Backups
+Bckup/
+backup/
+*.bak
+
+# OS junk
+Thumbs.db
+desktop.ini

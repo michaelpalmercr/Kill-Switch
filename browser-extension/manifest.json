@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "KillSwitch Vault",
+  "version": "1.0.0",
+  "description": "Your own encrypted password vault with a Save-login prompt. Runs only in your browser, sees only pages you visit, and nothing ever leaves your machine.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "KillSwitch Vault"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}
