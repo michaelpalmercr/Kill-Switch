@@ -56,6 +56,7 @@ public sealed class AddAppDialog : Form
         Controls.AddRange(new Control[] { hint, _filter, refresh, _list, browse, ok, cancel });
         AcceptButton = ok;
         CancelButton = cancel;
+        Theme.Apply(this);
 
         Populate();
     }

@@ -71,6 +71,7 @@ public sealed class DestinationsForm : Form
         Controls.Add(btns);
         Controls.Add(hint);
         AcceptButton = bClose;
+        Theme.Apply(this);
 
         Reload();
         _timer.Tick += (_, _) => Reload();

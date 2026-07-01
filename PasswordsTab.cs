@@ -225,6 +225,7 @@ public sealed class PasswordsTab : UserControl
         var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel }; cancel.SetBounds(344, 282, 80, 30);
         f.Controls.AddRange(new Control[] { showCb, nLbl, tNotes, ok, cancel });
         f.AcceptButton = ok; f.CancelButton = cancel;
+        Theme.Apply(f);
 
         if (f.ShowDialog(this) != DialogResult.OK) return null;
         e.Title = tTitle.Text.Trim();

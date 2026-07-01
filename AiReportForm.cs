@@ -57,6 +57,7 @@ public sealed class AiReportForm : Form
         Controls.Add(outPanel);
         Controls.Add(header);
         Controls.Add(bar);
+        Theme.Apply(this);
         Shown += (_, _) => Run();
     }
 
@@ -106,6 +107,7 @@ public sealed class AiReportForm : Form
         var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel }; cancel.SetBounds(378, 90, 80, 30);
         f.Controls.AddRange(new Control[] { lbl, tb, ok, cancel });
         f.AcceptButton = ok; f.CancelButton = cancel;
+        Theme.Apply(f);
         return f.ShowDialog(this) == DialogResult.OK ? tb.Text : null;
     }
 }

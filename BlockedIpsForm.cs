@@ -50,6 +50,7 @@ public sealed class BlockedIpsForm : Form
 
         Controls.AddRange(new Control[] { _list, _ip, add, remove, close });
         AcceptButton = close;
+        Theme.Apply(this);
         Reload();
     }
 

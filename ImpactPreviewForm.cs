@@ -35,6 +35,7 @@ public sealed class ImpactPreviewForm : Form
             _target.TrimEnd('\\').EndsWith(@":\", StringComparison.OrdinalIgnoreCase));
 
         BuildUi();
+        Theme.Apply(this);
         Shown += async (_, _) => await RunScanAsync();
     }
 

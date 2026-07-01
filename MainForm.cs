@@ -40,6 +40,7 @@ public sealed class MainForm : Form
     {
         _ctx = ctx;
         BuildUi();
+        Theme.Apply(this);
         _ctx.StateChanged += OnStateChanged;
         _ctx.SaveLoginRequested += OnSaveLoginRequested;
         FormClosed += (_, _) => _ctx.SaveLoginRequested -= OnSaveLoginRequested;
@@ -69,7 +70,7 @@ public sealed class MainForm : Form
         Font = new Font("Segoe UI", 9f);
         Icon = IconFactory.Make(false);
 
-        var tabs = new TabControl { Dock = DockStyle.Fill };
+        var tabs = new ModernTabControl { Dock = DockStyle.Fill };
         _tabs = tabs;
         var pageControl = new TabPage("Control");
         var pageTraffic = new TabPage("Traffic");
@@ -452,7 +453,10 @@ public sealed class MainForm : Form
         _statusText.ForeColor = blocked ? IconFactory.Blocked : IconFactory.Online;
 
         _toggle.Text = blocked ? "Restore Internet" : "Cut Internet";
-        _toggle.BackColor = blocked ? IconFactory.Online : IconFactory.Blocked;
+        var toggleColor = blocked ? IconFactory.Online : IconFactory.Blocked;
+        _toggle.BackColor = toggleColor;
+        _toggle.FlatAppearance.MouseOverBackColor = ControlPaint.Light(toggleColor, 0.18f);
+        _toggle.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(toggleColor, 0.02f);
 
         _rbFirewall.Checked = S.Mechanism == KillMechanism.Firewall;
         _rbAdapter.Checked = S.Mechanism == KillMechanism.Adapter;

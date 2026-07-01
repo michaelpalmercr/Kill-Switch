@@ -56,6 +56,7 @@ public sealed class AllowPromptForm : Form
 
         Controls.AddRange(new Control[] { title, pathLbl, ask, allow, once, always });
         AcceptButton = allow;
+        Theme.Apply(this);
     }
 
     private void Close(AllowPromptResult r) { Result = r; Close(); }

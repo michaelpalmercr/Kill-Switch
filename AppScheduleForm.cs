@@ -98,6 +98,7 @@ public sealed class AppScheduleForm : Form
         Controls.AddRange(new Control[] { _enabled, hint, _list, _from, dash, _to, add, remove, save, cancel, removeAll });
         AcceptButton = save;
         CancelButton = cancel;
+        Theme.Apply(this);
     }
 
     private void AddWindow()

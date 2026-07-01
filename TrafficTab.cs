@@ -7,9 +7,48 @@ public sealed class FastListView : ListView
     {
         View = View.Details;
         FullRowSelect = true;
-        GridLines = true;
+        GridLines = false;
         DoubleBuffered = true;
         HeaderStyle = ColumnHeaderStyle.Clickable;
+        BorderStyle = BorderStyle.None;
+        BackColor = Theme.Surface2;
+        ForeColor = Theme.Text;
+        OwnerDraw = true;
+    }
+
+    protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
+    {
+        using (var bg = new SolidBrush(Theme.HeaderBg)) e.Graphics.FillRectangle(bg, e.Bounds);
+        using (var pen = new Pen(Theme.Border)) e.Graphics.DrawLine(pen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
+
+        var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.LeftAndRightPadding;
+        if (e.Header != null)
+        {
+            if (e.Header.TextAlign == HorizontalAlignment.Right) flags |= TextFormatFlags.Right;
+            else if (e.Header.TextAlign == HorizontalAlignment.Center) flags |= TextFormatFlags.HorizontalCenter;
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, Font, e.Bounds, Theme.TextDim, flags);
+        }
+    }
+
+    protected override void OnDrawItem(DrawListViewItemEventArgs e) => e.DrawDefault = false; // cells drawn in OnDrawSubItem
+
+    protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+    {
+        if (e.Item is null || e.SubItem is null) { e.DrawDefault = true; return; }
+        bool selected = e.Item.Selected;
+        using (var bg = new SolidBrush(selected ? Theme.Selection : Theme.Surface2))
+            e.Graphics.FillRectangle(bg, e.Bounds);
+
+        // respect per-row colors (e.g. red "locked"); otherwise use the theme text color
+        var color = (e.Item.ForeColor.ToArgb() == Theme.Text.ToArgb() || e.Item.ForeColor.ToArgb() == SystemColors.WindowText.ToArgb())
+            ? Theme.Text : e.Item.ForeColor;
+
+        var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.LeftAndRightPadding;
+        var align = e.Header?.TextAlign ?? HorizontalAlignment.Left;
+        if (align == HorizontalAlignment.Right) flags |= TextFormatFlags.Right;
+        else if (align == HorizontalAlignment.Center) flags |= TextFormatFlags.HorizontalCenter;
+
+        TextRenderer.DrawText(e.Graphics, e.SubItem.Text, Font, e.Bounds, color, flags);
     }
 }
 

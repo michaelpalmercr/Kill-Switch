@@ -75,6 +75,7 @@ public sealed class AiAnalysisForm : Form
         Controls.Add(outPanel);
         Controls.Add(header);
         Controls.Add(bar);
+        Theme.Apply(this);
     }
 
     private async void MaybeAnalyze(bool force = false)
@@ -161,6 +162,7 @@ public sealed class AiAnalysisForm : Form
         f.Controls.AddRange(new Control[] { lbl, tb, ok, cancel });
         f.AcceptButton = ok;
         f.CancelButton = cancel;
+        Theme.Apply(f);
         return f.ShowDialog(this) == DialogResult.OK ? tb.Text : null;
     }
 }

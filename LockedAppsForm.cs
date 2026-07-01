@@ -52,6 +52,7 @@ public sealed class LockedAppsForm : Form
         Controls.Add(hint);
         Controls.Add(bar);
         CancelButton = close;
+        Theme.Apply(this);
     }
 
     private void Reload()
