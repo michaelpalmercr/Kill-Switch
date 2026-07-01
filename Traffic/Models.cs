@@ -79,6 +79,28 @@ public sealed class AppUsage
     public long TotalBytes => BytesIn + BytesOut;
 }
 
+/// <summary>Machine-wide traffic to a single remote IP, aggregated across every app.
+/// Used by the Connections view: who is receiving our uploads and who is reaching into the PC.</summary>
+public sealed class RemoteEndpoint
+{
+    public string Ip = "";
+    public string? Host;                 // hostname from DNS / TLS SNI / HTTP Host, if known
+    public string? Owner;                // org/company from WHOIS/RDAP, filled on demand
+    public long BytesIn;                 // received FROM this IP (it reaching into us)
+    public long BytesOut;                // SENT TO this IP (our data going out)
+    public long Packets;
+    public DateTime LastSeen;
+    public SortedSet<string> Apps = new(StringComparer.OrdinalIgnoreCase); // apps talking to it
+
+    public long TotalBytes => BytesIn + BytesOut;
+    public bool HasOutbound => BytesOut > 0;
+    public bool HasInbound => BytesIn > 0;
+    /// <summary>Reaching into the PC without us sending anything back to it (unsolicited-looking).</summary>
+    public bool InboundOnly => BytesIn > 0 && BytesOut == 0;
+    public string Label => string.IsNullOrEmpty(Host) ? Ip : Host!;
+    public string AppsLabel => Apps.Count == 0 ? "" : string.Join(", ", Apps);
+}
+
 /// <summary>Traffic to a single remote destination (one IP), for one app.</summary>
 public sealed class DestUsage
 {

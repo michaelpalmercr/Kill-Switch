@@ -77,7 +77,7 @@ public sealed class FastListView : ListView
 public sealed class TrafficTab : UserControl
 {
     private readonly KillSwitchContext _ctx;
-    private readonly TrafficMonitor _monitor = new();
+    private readonly TrafficMonitor _monitor;
 
     private readonly ComboBox _engine = new();
     private readonly CheckBox _capture = new();
@@ -101,6 +101,7 @@ public sealed class TrafficTab : UserControl
     public TrafficTab(KillSwitchContext ctx)
     {
         _ctx = ctx;
+        _monitor = ctx.Monitor; // shared, always-on monitor
         BuildUi();
         _ui.Tick += (_, _) =>
         {
@@ -241,15 +242,15 @@ public sealed class TrafficTab : UserControl
     private void OnVisibilityChanged()
     {
         if (Visible) { Restart(); _ui.Start(); }
-        else { _ui.Stop(); _monitor.Stop(); }
+        else { _ui.Stop(); } // keep the shared monitor capturing in the background
     }
 
     private void Restart()
     {
-        _monitor.Stop();
-        if (!Visible || !_capture.Checked) { UpdateStatus(); return; }
-
         var engine = _engine.SelectedIndex == 1 ? CaptureEngine.Npcap : CaptureEngine.RawSocket;
+        if (!_capture.Checked) { _monitor.Stop(); UpdateStatus(); return; }
+        if (_monitor.Running && _monitor.Engine == engine) { UpdateStatus(); return; } // already capturing on the right engine
+
         if (engine == CaptureEngine.Npcap && !NpcapCapture.IsInstalled())
         {
             var ans = MessageBox.Show(this,

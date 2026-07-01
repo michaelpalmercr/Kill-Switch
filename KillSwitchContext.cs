@@ -16,6 +16,7 @@ public sealed class KillSwitchContext : ApplicationContext
     private readonly Scheduler _scheduler;
     private readonly GlobalHotkey _hotkey;
     private readonly GlobalHotkey _saveLoginHotkey;
+    private readonly System.Windows.Forms.Timer _ledgerTimer = new();
 
     /// <summary>Raised when the "save login" hotkey (Ctrl+Alt+L) is pressed; carries the foreground window title captured before we steal focus.</summary>
     public event Action<string>? SaveLoginRequested;
@@ -83,6 +84,12 @@ public sealed class KillSwitchContext : ApplicationContext
         StartAppScheduler();
         if (Settings.AllowlistMode) StartAllowWatcher();
         if (Settings.MitmEnabled) { try { Mitm.Start(Settings.MitmPort); } catch { } }
+
+        // Always-on capture so destinations/connections are recorded even with no tab open.
+        try { Monitor.Start(CaptureEngine.RawSocket); } catch { }
+        _ledgerTimer.Interval = 5000;
+        _ledgerTimer.Tick += (_, _) => { if (Monitor.Running) { try { RecordUsage(Monitor.SnapshotApps()); } catch { } } };
+        _ledgerTimer.Start();
 
         if (forceShow || !Settings.StartMinimized)
             ShowMainWindow();
@@ -440,6 +447,9 @@ public sealed class KillSwitchContext : ApplicationContext
     public Ledger Ledger { get; } = Ledger.Load();
     public UsageHistory Usage { get; } = UsageHistory.Load();
     public PasswordVault Vault { get; } = new();
+
+    /// <summary>Shared, always-on traffic monitor so destinations are recorded even when no tab is open.</summary>
+    public TrafficMonitor Monitor { get; } = new();
     private readonly Dictionary<string, (long In, long Out)> _ledgerBase = new(StringComparer.OrdinalIgnoreCase);
     private long _ledgerLastSave;
 
@@ -652,6 +662,8 @@ public sealed class KillSwitchContext : ApplicationContext
         _scheduler.Dispose();
         _hotkey.Dispose();
         _saveLoginHotkey.Dispose();
+        try { _ledgerTimer.Stop(); _ledgerTimer.Dispose(); } catch { }
+        try { Monitor.Dispose(); } catch { }
         _tray.Visible = false;
         _tray.Dispose();
         _currentIcon?.Dispose();

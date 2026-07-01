@@ -65,8 +65,8 @@ public sealed class MainForm : Form
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = true;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(820, 740);
-        MinimumSize = new Size(700, 600);
+        ClientSize = new Size(980, 740);
+        MinimumSize = new Size(720, 600);
         Font = new Font("Segoe UI", 9f);
         Icon = IconFactory.Make(false);
 
@@ -74,6 +74,7 @@ public sealed class MainForm : Form
         _tabs = tabs;
         var pageControl = new TabPage("Control");
         var pageTraffic = new TabPage("Traffic");
+        var pageConnections = new TabPage("Connections");
         var pagePrograms = new TabPage("Programs");
         var pageApps = new TabPage("Apps");
         var pageLedger = new TabPage("Ledger");
@@ -83,6 +84,7 @@ public sealed class MainForm : Form
         var pageInstalled = new TabPage("Installed");
         tabs.TabPages.Add(pageControl);
         tabs.TabPages.Add(pageTraffic);
+        tabs.TabPages.Add(pageConnections);
         tabs.TabPages.Add(pagePrograms);
         tabs.TabPages.Add(pageApps);
         tabs.TabPages.Add(pageLedger);
@@ -119,6 +121,7 @@ public sealed class MainForm : Form
         CenterRoot();
 
         pageTraffic.Controls.Add(new TrafficTab(_ctx));
+        pageConnections.Controls.Add(new ConnectionsTab(_ctx));
         pagePrograms.Controls.Add(new ProgramsTab(_ctx));
         pageApps.Controls.Add(new AppsTab(_ctx));
         pageLedger.Controls.Add(new LedgerTab(_ctx));

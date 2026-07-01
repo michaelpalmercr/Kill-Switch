@@ -12,7 +12,7 @@ public sealed class ModernTabControl : TabControl
                  ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
         DrawMode = TabDrawMode.OwnerDrawFixed;
         SizeMode = TabSizeMode.Fixed;
-        ItemSize = new Size(116, 36);
+        ItemSize = new Size(100, 36);
         Alignment = TabAlignment.Top;
         Font = new Font("Segoe UI", 9.5f);
     }

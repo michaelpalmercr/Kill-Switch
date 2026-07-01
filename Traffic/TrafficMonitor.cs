@@ -250,6 +250,32 @@ public sealed class TrafficMonitor : IDisposable
         }
     }
 
+    /// <summary>Machine-wide per-IP traffic aggregated across every app (both directions), for the Connections view.</summary>
+    public List<RemoteEndpoint> SnapshotAllDests()
+    {
+        lock (_lock)
+        {
+            var map = new Dictionary<string, RemoteEndpoint>();
+            foreach (var app in _apps.Values)
+            {
+                foreach (var d in app.Dests.Values)
+                {
+                    if (!map.TryGetValue(d.Ip, out var e))
+                    {
+                        e = new RemoteEndpoint { Ip = d.Ip, Host = _dns.TryGetValue(d.Ip, out var h) ? h : null };
+                        map[d.Ip] = e;
+                    }
+                    e.BytesIn += d.BytesIn;
+                    e.BytesOut += d.BytesOut;
+                    e.Packets += d.Packets;
+                    if (d.LastSeen > e.LastSeen) e.LastSeen = d.LastSeen;
+                    if (!string.IsNullOrWhiteSpace(app.Name) && app.Name != "?") e.Apps.Add(app.Name);
+                }
+            }
+            return map.Values.ToList();
+        }
+    }
+
     public PacketRecord[] SnapshotRecent(int max = 500)
     {
         lock (_lock)
