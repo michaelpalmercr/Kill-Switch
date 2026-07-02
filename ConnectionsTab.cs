@@ -16,6 +16,7 @@ public sealed class ConnectionsTab : UserControl
     private readonly TextBox _filter = new();
     private readonly ComboBox _dir = new();
     private readonly CheckBox _showLocal = new();
+    private readonly CheckBox _autoOwner = new();
     private readonly Label _summary = new();
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1500 };
     private ISet<string> _blockedIps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -39,20 +40,36 @@ public sealed class ConnectionsTab : UserControl
         Dock = DockStyle.Fill;
         Padding = new Padding(8);
 
-        var top = new Panel { Dock = DockStyle.Top, Height = 32 };
-        var lbl = new Label { Text = "Every IP your PC is talking to. Outbound = your data going out; Inbound = who's reaching in.", AutoSize = true, ForeColor = Color.DimGray, Location = new Point(2, 7) };
-        _dir.DropDownStyle = ComboBoxStyle.DropDownList;
-        _dir.Items.AddRange(new object[] { "All", "Outbound (my data)", "Inbound (to my PC)", "Unsolicited inbound" });
-        _dir.SelectedIndex = 0;
-        _dir.SetBounds(560, 4, 160, 24);
-        _dir.SelectedIndexChanged += (_, _) => Reload();
-        _showLocal.Text = "Show local/LAN"; _showLocal.AutoSize = true; _showLocal.Location = new Point(732, 6);
-        _showLocal.CheckedChanged += (_, _) => Reload();
-        var flbl = new Label { Text = "Filter:", AutoSize = true, Location = new Point(858, 7) };
-        _filter.SetBounds(902, 4, 150, 24);
+        var top = new Panel { Dock = DockStyle.Top, Height = 34 };
+        var right = new FlowLayoutPanel { Dock = DockStyle.Right, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, AutoSize = true };
+
+        _filter.Width = 150; _filter.Margin = new Padding(3, 4, 2, 0);
         _filter.PlaceholderText = "host / ip / owner";
         _filter.TextChanged += (_, _) => Reload();
-        top.Controls.AddRange(new Control[] { lbl, _dir, _showLocal, flbl, _filter });
+        var flbl = new Label { Text = "Filter:", AutoSize = true, Margin = new Padding(6, 9, 0, 0) };
+
+        _dir.DropDownStyle = ComboBoxStyle.DropDownList;
+        _dir.Items.AddRange(new object[] { "All", "Outbound (my data)", "Inbound (to my PC)", "Unsolicited inbound" });
+        _dir.SelectedIndex = 0; _dir.Width = 158; _dir.Margin = new Padding(8, 4, 2, 0);
+        _dir.SelectedIndexChanged += (_, _) => Reload();
+
+        _autoOwner.Text = "Auto owner lookup"; _autoOwner.AutoSize = true; _autoOwner.Margin = new Padding(8, 8, 2, 0);
+        _autoOwner.CheckedChanged += (_, _) => Reload();
+
+        _showLocal.Text = "Show local/LAN"; _showLocal.AutoSize = true; _showLocal.Margin = new Padding(8, 8, 2, 0);
+        _showLocal.CheckedChanged += (_, _) => Reload();
+
+        // right-to-left flow: first added is rightmost
+        right.Controls.Add(_filter);
+        right.Controls.Add(flbl);
+        right.Controls.Add(_dir);
+        right.Controls.Add(_autoOwner);
+        right.Controls.Add(_showLocal);
+
+        var lbl = new Label { Dock = DockStyle.Fill, Text = "Every IP your PC talks to — outbound (your data leaving) and inbound (who's reaching in).", ForeColor = Color.DimGray, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(2, 0, 0, 0) };
+
+        top.Controls.Add(lbl);
+        top.Controls.Add(right);
 
         _list.Dock = DockStyle.Fill;
         _list.Columns.Add("Dir", 44, HorizontalAlignment.Center);
@@ -147,6 +164,14 @@ public sealed class ConnectionsTab : UserControl
         }
         _list.EndUpdate();
         _summary.Text = $"{list.Count} endpoints";
+
+        if (_autoOwner.Checked && !_resolving)
+        {
+            var todo = new List<string>();
+            foreach (ListViewItem it in _list.Items)
+                if (it.Tag is RemoteEndpoint e && !WhoisLookup.TryGetCached(e.Ip, out _)) todo.Add(e.Ip);
+            if (todo.Count > 0) ResolveOwnersAsync(todo.Distinct().Take(20).ToList());
+        }
     }
 
     private static string DirGlyph(RemoteEndpoint e) => e.HasOutbound && e.HasInbound ? "↕" : e.HasOutbound ? "↑" : "↓";
@@ -212,16 +237,20 @@ public sealed class ConnectionsTab : UserControl
     }
 
     /// <summary>Resolve owners via RDAP for the current view (selected first, then the rest), then refresh.</summary>
-    private async void ResolveSelected()
+    private void ResolveSelected()
     {
-        if (_resolving) return;
         var ips = new List<string>();
         if (Sel() is { } sel) ips.Add(sel.Ip);
         foreach (ListViewItem it in _list.Items)
             if (it.Tag is RemoteEndpoint e && !WhoisLookup.TryGetCached(e.Ip, out _)) ips.Add(e.Ip);
         ips = ips.Distinct().Take(40).ToList();
         if (ips.Count == 0) { Info("Owners already resolved for the visible rows."); return; }
+        ResolveOwnersAsync(ips);
+    }
 
+    private async void ResolveOwnersAsync(List<string> ips)
+    {
+        if (_resolving || ips.Count == 0) return;
         _resolving = true;
         _summary.Text = $"Resolving {ips.Count} owner(s) via WHOIS…";
         try
@@ -233,7 +262,7 @@ public sealed class ConnectionsTab : UserControl
             }
         }
         finally { _resolving = false; }
-        if (!IsDisposed) Reload();
+        if (!IsDisposed && Visible) Reload();
     }
 
     private void LookUp()
